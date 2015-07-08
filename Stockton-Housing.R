@@ -7,6 +7,8 @@ rm(list = ls())
 #libraries
 library(foreign)
 library(ggplot2)
+library(lmtest)
+library(car)
 
 ## Load data ## 
 stockton <- read.dta("stockton2.dta")
@@ -15,27 +17,38 @@ str(stockton)
 head(stockton)
 plot(stockton$sqft, stockton$price)
 plot(stockton$age, stockton$price)
-#notes about the data
+#notes about the data ..... #
 
-stockton$agesq <- stockton$age^2
-stockton$hundredsqft <- stockton$sqft/100
-head(data)
+stockton$agesq <- stockton$age^2 #age square as nonlinear
+stockton$hundredsqft <- stockton$sqft/100 #change to 100 square feet
+head(stockton)
 
-## Models ##
+### Models ##
+############
 
 #Ln(price) = B0(sqft/100) + B1(age) + B2(stories) + B3 (vacant) + e
-modelOLS.Stockton <- lm(log(price) ~ hundredsqft + stories + vacant, stockton)
+modelOLS.Stockton <- lm(log(price) ~ hundredsqft + age + stories + vacant, stockton)
 summary(modelOLS.Stockton)
+plot(modelOLS.Stockton) #quick residual plots
+residualPlots(modelOLS.Stockton) # hundresqft p-value of 0.057
+
+avPlots(modelOLS.Stockton, id.n=3) #added variable plots
+qqPlot(modelOLS.Stockton, id.n=3) #outlier plots
+influencePlot(modelOLS.Stockton, id.n=3) #influence plot
+
+bptest(modelOLS.Stockton) #Breuch-Pagan test for constant variance
+whites.htest()#white test for non-linear constant variance
 
 #Ln(price) = F(sqft/100, age agesq stories vacant), estimate using OLS
 
+modelOLS.Stockton2 <- lm(log(price) ~ hundredsqft + age + agesq + stories + vacant, stockton)
+summary(modelOLS.Stockton2)
+plot(modelOLS.Stockton2)
 
-model1 <- lm(log(price) ~ hundredsqft + age + agesq + stories + vacant, data)
-summary(model1)
-plot(model1)
+
 #2.Plot the squared residuals separately against all RHS variables. 
-sqresids <- model1$residuals^2
+sqresids <- modelOLS.Stockton$residuals^2
 lnehat <- log(sqresids)
-model2 <- lm(lnehat ~ hundredsqft + age + agesq + stories + vacant, data)
+model2 <- lm(lnehat ~ hundredsqft + age + agesq + stories + vacant, stockton)
 summary(model2)
 plot(model2)
