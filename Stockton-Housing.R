@@ -1,5 +1,6 @@
-#### Stockton Housing Price Models ###
-#####################################
+########################################
+#### Stockton Housing Price Models  ###
+######################################
 
 #clear
 rm(list = ls())
@@ -11,7 +12,8 @@ library(lmtest)
 library(car)
 
 ## Load data ## 
-stockton <- read.dta("stockton2.dta")
+##############
+stockton <- read.dta("stockton2.dta") #change name to include year
 summary(stockton)
 str(stockton)
 head(stockton)
@@ -19,12 +21,19 @@ plot(stockton$sqft, stockton$price)
 plot(stockton$age, stockton$price)
 #notes about the data ..... #
 
+#load more current data
+#constrain currrent data (max/min price or sqft, variables)
+
+
+
+
 stockton$agesq <- stockton$age^2 #age square as nonlinear
 stockton$hundredsqft <- stockton$sqft/100 #change to 100 square feet
 head(stockton)
 
-### Models ##
-############
+#################
+###  Models   ##
+###############
 
 #Ln(price) = B0(sqft/100) + B1(age) + B2(stories) + B3 (vacant) + e
 modelOLS.Stockton <- lm(log(price) ~ hundredsqft + age + stories + vacant, stockton)
@@ -40,11 +49,9 @@ bptest(modelOLS.Stockton) #Breuch-Pagan test for constant variance
 whites.htest()#white test for non-linear constant variance
 
 #Ln(price) = F(sqft/100, age agesq stories vacant), estimate using OLS
-
 modelOLS.Stockton2 <- lm(log(price) ~ hundredsqft + age + agesq + stories + vacant, stockton)
 summary(modelOLS.Stockton2)
 plot(modelOLS.Stockton2)
-
 
 #2.Plot the squared residuals separately against all RHS variables. 
 sqresids <- modelOLS.Stockton$residuals^2
